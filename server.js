@@ -23,10 +23,10 @@ app.post("/upload", upload.single("fileData"), (req, res, next) => {
   fs.readFile(req.file.path, (err, contents) => {
     if (err) {
       console.log("Error: ", err);
-      res.send("error");
+      res.status(500).json({ error: err });
     } else {
       console.log("File contents ", contents);
-      res.send("okay");
+      res.status(201).json({ status: "success" });
     }
   });
 });
