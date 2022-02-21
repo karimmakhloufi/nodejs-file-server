@@ -39,17 +39,21 @@ const port = 3000;
 const verifyToken = async (req, res, next) => {
   console.log(req.headers.authorization);
   if (req.headers.authorization.split("Bearer ")[1]) {
+    console.log("bearer is here");
     const [rows] = await connection.execute(
       "SELECT * FROM `users` WHERE `token` = ? AND `isVerified` = ?",
       [req.headers.authorization.split("Bearer ")[1], true]
     );
 
     if (rows.length > 0) {
+      console.log("rows.length is > 0");
       next();
     } else {
+      console.log("rows is not > 0");
       res.send("Token error");
     }
   } else {
+    console.log("bearer is not here");
     res.send("Token error");
   }
 };
