@@ -57,6 +57,7 @@ app.get("/confirmEmail", async (req, res) => {
     "SELECT * FROM `users` WHERE `email` = ? AND `token` = ? AND `isVerified = ?`",
     [req.query.email, req.query.token, false]
   );
+  console.log("before rows");
   console.log("rows", rows);
   if (rows.length > 0) {
     const [rows] = await connection.execute(
