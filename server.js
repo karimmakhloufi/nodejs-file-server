@@ -49,29 +49,23 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
-app.get("/confirmEmail", (req, res) => {
+app.get("/confirmEmail", async (req, res) => {
   console.log("email", req.query.email);
   console.log("token", req.query.token);
-  if (
-    verifiedEmails.some(
-      (el) =>
-        el.email === req.query.email &&
-        el.token === req.query.token &&
-        el.isVerified === false
-    )
-  ) {
-    verifiedEmails = verifiedEmails.map((el) => {
-      if (el.email === req.query.email) {
-        return {
-          ...el,
-          isVerified: true,
-        };
-      } else {
-        return el;
-      }
-    });
+
+  const [rows] = await connection.execute(
+    "SELECT * FROM `users` WHERE `email` = ? AND `token` = ? AND `isVerified = ?`",
+    [req.query.email, req.query.token, false]
+  );
+  console.log("rows", rows);
+  if (rows.length > 0) {
+    const [rows] = await connection.execute(
+      "UPDATE `users` SET isVerified = ? WHERE `email` = ?",
+      [true, req.query.email]
+    );
     res.send("Your token is now valid: " + req.query.token);
   }
+  res.send("Error confirming your token, contact your instructor");
 });
 
 app.get("/getToken", async (req, res) => {
