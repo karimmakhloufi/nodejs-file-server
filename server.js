@@ -1,4 +1,5 @@
 require("dotenv").config();
+const mysql = require("mysql2/promise");
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
@@ -6,6 +7,19 @@ const multer = require("multer");
 const { v4: uuidv4 } = require("uuid");
 const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+let connection;
+
+const createConnectionToDB = async () => {
+  connection = await mysql.createConnection({
+    host: process.env.MYSQL_HOST,
+    user: process.env.MYSQL_USER,
+    database: process.env.MYSQL_DB,
+    password: process.env.MYSQL_PASSWORD,
+  });
+};
+
+createConnectionToDB();
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -63,39 +77,42 @@ app.get("/confirmEmail", (req, res) => {
 app.get("/getToken", (req, res) => {
   console.log(req.query.email);
   const id = uuidv4();
-  if (verifiedEmails.some((el) => (el.email = req.query.email))) {
-    res.send("email already used");
-  } else {
-    verifiedEmails.push({ email: req.query.email, id: id, isVerified: false });
-    const msg = {
-      to: req.query.email, // Change to your recipient
-      from: "noreply@wildcodeschool.com", // Change to your verified sender
-      subject: "Confirm your email",
-      text:
-        "copy and paste this link in your browser http://localhost:3000/confirmEmail?email=" +
-        req.query.email +
-        "&token=" +
-        id,
-      html:
-        "<p>Click this link to confirm your email <a clicktracking='off' href=http://localhost:3000/confirmEmail?email=" +
-        req.query.email +
-        "&token=" +
-        id +
-        ">Clickme</a>",
-    };
-
-    sgMail
-      .send(msg)
-      .then((response) => {
-        console.log(response[0].statusCode);
-        console.log(response[0].headers);
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-
-    res.send("check you email to confirm");
+  try {
+    await connection.execute(
+      "INSERT INTO users (email, token, isVerified) VALUES (?, ?, ?)",
+      [req.query.email, id, false]
+    );
+  } catch (err) {
+    console.log("error while inserting data in db", err);
   }
+  const msg = {
+    to: req.query.email, // Change to your recipient
+    from: "noreply@wildcodeschool.com", // Change to your verified sender
+    subject: "Confirm your email",
+    text:
+      "copy and paste this link in your browser http://localhost:3000/confirmEmail?email=" +
+      req.query.email +
+      "&token=" +
+      id,
+    html:
+      "<p>Click this link to confirm your email <a clicktracking='off' href=http://localhost:3000/confirmEmail?email=" +
+      req.query.email +
+      "&token=" +
+      id +
+      ">Clickme</a>",
+  };
+
+  sgMail
+    .send(msg)
+    .then((response) => {
+      console.log(response[0].statusCode);
+      console.log(response[0].headers);
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+
+  res.send("check you email to confirm");
 });
 
 app.get("/createToken", (req, res) => {
