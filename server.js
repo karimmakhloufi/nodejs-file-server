@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
     cb(null, "files/");
   },
   filename: function (req, file, cb) {
-    cb(null, Date.now() + file.originalname);
+    cb(null, Date.now() + "-" + file.originalname);
   },
 });
 const upload = multer({ storage: storage });
@@ -154,8 +154,6 @@ app.post("/upload", upload.single("fileData"), async (req, res) => {
       [req.headers.authorization.split("Bearer ")[1], true]
     );
 
-    console.log(rows);
-
     if (rows.length > 0) {
       console.log(req.file.path);
       fs.readFile(req.file.path, (err, contents) => {
@@ -163,7 +161,6 @@ app.post("/upload", upload.single("fileData"), async (req, res) => {
           console.log("Error: ", err);
           res.status(500).json({ error: err });
         } else {
-          console.log("original filename", req.file.path);
           res.status(201).json({ status: "success" });
         }
       });
