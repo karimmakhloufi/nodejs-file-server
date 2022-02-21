@@ -45,6 +45,8 @@ const verifyToken = async (req, res, next) => {
       [req.headers.authorization.split("Bearer ")[1], true]
     );
 
+    console.log(rows);
+
     if (rows.length > 0) {
       console.log("rows.length is > 0");
       next();
