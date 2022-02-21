@@ -51,7 +51,7 @@ const verifyToken = async (req, res, next) => {
 
     if (rows.length > 0) {
       console.log("rows.length is > 0");
-      next();
+      next(req, res);
     } else {
       console.log("rows is not > 0");
       res.send("Token error");
