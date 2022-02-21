@@ -27,7 +27,7 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     console.log("token", req.headers.authorization);
-    console.log("filename", file.originalname);
+    console.log("filename", Date.now() + file.originalname);
     cb(null, file.originalname);
   },
 });
