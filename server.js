@@ -22,6 +22,15 @@ const port = 3000;
 
 let verifiedEmails = [];
 
+const verifyToken = (req, res, next) => {
+  console.log(req.headers);
+  next();
+};
+
+app.get("/test", verifyToken, (req, res) => {
+  res.send("token is okay");
+});
+
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
