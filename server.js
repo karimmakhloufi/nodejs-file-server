@@ -34,7 +34,7 @@ const upload = multer({ storage: storage });
 const app = express();
 const port = 3000;
 
-const verifyToken = (req, res, next) => {
+const verifyToken = async (req, res, next) => {
   console.log(req.headers.authorization);
   if (req.headers.authorization.split("Bearer ")[1]) {
     const [rows] = await connection.execute(
