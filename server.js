@@ -34,10 +34,9 @@ const upload = multer({ storage: storage });
 const app = express();
 const port = 3000;
 
-let verifiedEmails = [];
-
 const verifyToken = (req, res, next) => {
-  console.log(req.headers);
+  console.log(req.headers.authorization);
+  console.log(req.headers.authorization.split("Bearer ")[1]);
   next();
 };
 
