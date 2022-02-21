@@ -85,12 +85,12 @@ app.get("/getToken", async (req, res) => {
     from: "noreply@wildcodeschool.com", // Change to your verified sender
     subject: "Confirm your email",
     text:
-      "copy and paste this link in your browser http://localhost:3000/confirmEmail?email=" +
+      "copy and paste this link in your browser https://wildstagram.nausicaa.wilders.dev/confirmEmail?email=" +
       req.query.email +
       "&token=" +
       id,
     html:
-      "<p>Click this link to confirm your email <a clicktracking='off' href=http://localhost:3000/confirmEmail?email=" +
+      "<p>Click this link to confirm your email <a clicktracking='off' https://wildstagram.nausicaa.wilders.dev/confirmEmail?email=" +
       req.query.email +
       "&token=" +
       id +
