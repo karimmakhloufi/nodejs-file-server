@@ -149,7 +149,7 @@ app.get("/createToken", (req, res) => {
   );
 });
 
-app.post("/upload", upload.single("fileData"), (req, res) => {
+app.post("/upload", upload.single("fileData"), async (req, res) => {
   console.log(req.headers.authorization);
   if (req.headers.authorization.split("Bearer ")[1]) {
     console.log("bearer is here");
