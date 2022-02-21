@@ -27,8 +27,8 @@ const verifyToken = (req, res, next) => {
   next();
 };
 
-app.get("/test", verifyToken, (req, res) => {
-  res.send("token is okay");
+app.post("/test", verifyToken, (req, res) => {
+  res.status(201).json({ status: "success" });
 });
 
 app.get("/", (req, res) => {
