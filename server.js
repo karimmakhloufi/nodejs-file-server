@@ -74,7 +74,7 @@ app.get("/confirmEmail", (req, res) => {
   }
 });
 
-app.get("/getToken", (req, res) => {
+app.get("/getToken", async (req, res) => {
   console.log(req.query.email);
   const id = uuidv4();
   try {
@@ -85,6 +85,7 @@ app.get("/getToken", (req, res) => {
   } catch (err) {
     console.log("error while inserting data in db", err);
   }
+
   const msg = {
     to: req.query.email, // Change to your recipient
     from: "noreply@wildcodeschool.com", // Change to your verified sender
