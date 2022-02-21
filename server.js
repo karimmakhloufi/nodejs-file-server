@@ -36,8 +36,20 @@ const port = 3000;
 
 const verifyToken = (req, res, next) => {
   console.log(req.headers.authorization);
-  console.log(req.headers.authorization.split("Bearer ")[1]);
-  next();
+  if (req.headers.authorization.split("Bearer ")[1]) {
+    const [rows] = await connection.execute(
+      "SELECT * FROM `users` WHERE `token` = ? AND `isVerified` = ?",
+      [req.headers.authorization.split("Bearer ")[1], true]
+    );
+
+    if (rows.length > 0) {
+      next();
+    } else {
+      res.send("Token error");
+    }
+  } else {
+    res.send("Token error");
+  }
 };
 
 app.post("/test", verifyToken, (req, res) => {
@@ -127,23 +139,21 @@ app.get("/createToken", (req, res) => {
   );
 });
 
-app.post("/upload", upload.single("fileData"), (req, res, next) => {
-  res.send("maintenance");
-  return;
+app.post("/upload", verifyToken, upload.single("fileData"), (req, res) => {
   fs.readFile(req.file.path, (err, contents) => {
     if (err) {
       console.log("Error: ", err);
       res.status(500).json({ error: err });
     } else {
       console.log("File contents ", contents);
+      console.log("filename", req.file.path);
+      console.log("file uploaded by", req.headers.authorization);
       res.status(201).json({ status: "success" });
     }
   });
 });
 
 app.get("/list", (req, res) => {
-  res.send("maintenance");
-  return;
   fs.readdir("files", (err, files) => {
     if (err) {
       console.log(err);
@@ -159,8 +169,6 @@ app.get("/list", (req, res) => {
 });
 
 app.get("/files/:filename", (req, res) => {
-  res.send("maintenance");
-  return;
   let file = path.join(__dirname + "/files", req.params.filename);
   console.log("file", file);
   fs.readFile(file, (err, content) => {
