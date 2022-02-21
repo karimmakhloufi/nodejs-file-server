@@ -62,7 +62,7 @@ const verifyToken = async (req, res, next) => {
   }
 };
 
-app.post("/test", verifyToken, (req, res) => {
+app.post("/test", (req, res) => {
   res.status(201).json({ status: "success" });
 });
 
@@ -149,18 +149,40 @@ app.get("/createToken", (req, res) => {
   );
 });
 
-app.post("/upload", verifyToken, upload.single("fileData"), (req, res) => {
-  fs.readFile(req.file.path, (err, contents) => {
-    if (err) {
-      console.log("Error: ", err);
-      res.status(500).json({ error: err });
-    } else {
-      console.log("File contents ", contents);
-      console.log("filename", req.file.path);
+app.post("/upload", upload.single("fileData"), (req, res) => {
+  console.log(req.headers.authorization);
+  if (req.headers.authorization.split("Bearer ")[1]) {
+    console.log("bearer is here");
+    const [rows] = await connection.execute(
+      "SELECT * FROM `users` WHERE `token` = ? AND `isVerified` = ?",
+      [req.headers.authorization.split("Bearer ")[1], true]
+    );
+
+    console.log(rows);
+
+    if (rows.length > 0) {
+      console.log("rows.length is > 0");
       console.log("file uploaded by", req.headers.authorization);
-      res.status(201).json({ status: "success" });
+      console.log(req.file.path);
+      fs.readFile(req.file.path, (err, contents) => {
+        if (err) {
+          console.log("Error: ", err);
+          res.status(500).json({ error: err });
+        } else {
+          console.log("File contents ", contents);
+          console.log("filename", req.file.path);
+          console.log("file uploaded by", req.headers.authorization);
+          res.status(201).json({ status: "success" });
+        }
+      });
+    } else {
+      console.log("rows is not > 0");
+      res.send("Token error");
     }
-  });
+  } else {
+    console.log("bearer is not here");
+    res.send("Token error");
+  }
 });
 
 app.get("/list", (req, res) => {
