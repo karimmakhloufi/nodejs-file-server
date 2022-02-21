@@ -23,6 +23,8 @@ createConnectionToDB();
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
+    console.log("token", req.headers.authorization);
+    console.log("file", file);
     cb(null, "files/");
   },
   filename: function (req, file, cb) {
@@ -38,7 +40,6 @@ const port = 3000;
 
 const verifyToken = async (req, res, next) => {
   console.log(req.headers.authorization);
-  console.log(req);
   if (req.headers.authorization.split("Bearer ")[1]) {
     console.log("bearer is here");
     const [rows] = await connection.execute(
