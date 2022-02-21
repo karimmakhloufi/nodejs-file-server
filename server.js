@@ -23,14 +23,10 @@ createConnectionToDB();
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    console.log("token", req.headers.authorization);
-    console.log("file", file);
     cb(null, "files/");
   },
   filename: function (req, file, cb) {
-    console.log("token", req.headers.authorization);
-    console.log("filename", Date.now() + file.originalname);
-    cb(null, file.originalname);
+    cb(null, Date.now() + file.originalname);
   },
 });
 const upload = multer({ storage: storage });
@@ -150,9 +146,9 @@ app.get("/createToken", (req, res) => {
 });
 
 app.post("/upload", upload.single("fileData"), async (req, res) => {
+  console.log("timestamp " + Date.now());
   console.log(req.headers.authorization);
   if (req.headers.authorization.split("Bearer ")[1]) {
-    console.log("bearer is here");
     const [rows] = await connection.execute(
       "SELECT * FROM `users` WHERE `token` = ? AND `isVerified` = ?",
       [req.headers.authorization.split("Bearer ")[1], true]
@@ -161,17 +157,13 @@ app.post("/upload", upload.single("fileData"), async (req, res) => {
     console.log(rows);
 
     if (rows.length > 0) {
-      console.log("rows.length is > 0");
-      console.log("file uploaded by", req.headers.authorization);
       console.log(req.file.path);
       fs.readFile(req.file.path, (err, contents) => {
         if (err) {
           console.log("Error: ", err);
           res.status(500).json({ error: err });
         } else {
-          console.log("File contents ", contents);
-          console.log("filename", req.file.path);
-          console.log("file uploaded by", req.headers.authorization);
+          console.log("original filename", req.file.path);
           res.status(201).json({ status: "success" });
         }
       });
