@@ -38,6 +38,7 @@ const port = 3000;
 
 const verifyToken = async (req, res, next) => {
   console.log(req.headers.authorization);
+  console.log(req);
   if (req.headers.authorization.split("Bearer ")[1]) {
     console.log("bearer is here");
     const [rows] = await connection.execute(
