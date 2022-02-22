@@ -70,7 +70,7 @@ app.get("/getToken", async (req, res) => {
     const id = uuidv4();
 
     const [rows] = await connection.execute(
-      "SELECT * FROM users WHERE email = ?)",
+      "SELECT * FROM users WHERE email = ?",
       [req.query.email]
     );
 
