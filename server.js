@@ -94,11 +94,10 @@ app.get("/getToken", async (req, res) => {
           "&token=" +
           id,
         html:
-          "<p>Click this link to confirm your email <a clicktracking='off' https://wildstagram.nausicaa.wilders.dev/confirmEmail?email=" +
+          "<p>Copy and paste this link in your browser to confirm your email https://wildstagram.nausicaa.wilders.dev/confirmEmail?email=" +
           req.query.email +
           "&token=" +
-          id +
-          ">Clickme</a>",
+          id,
       };
 
       sgMail
