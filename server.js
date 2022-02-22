@@ -112,7 +112,7 @@ app.get("/getToken", async (req, res) => {
 
       res.send("check you email to confirm");
     } else {
-      res.send("email exists, activate it");
+      res.send("email exists and is already active, contact your instructor");
     }
   } else {
     res.send("enter a wildcodeschool.com email");
