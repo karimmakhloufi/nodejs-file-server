@@ -66,10 +66,7 @@ app.get("/confirmEmail", async (req, res) => {
 app.get("/getToken", async (req, res) => {
   console.log(req.query.email);
   const domain = req.query.email.split("@");
-  if (
-    domain === "wilder.school" ||
-    req.query.email === "karim.makhloufi@wildcodeschool.com"
-  ) {
+  if (domain === "wilder.school" || domain === "wildcodeschool.com") {
     const id = uuidv4();
 
     const [rows] = await connection.execute(
