@@ -34,30 +34,6 @@ const upload = multer({ storage: storage });
 const app = express();
 const port = 3000;
 
-const verifyToken = async (req, res, next) => {
-  console.log(req.headers.authorization);
-  if (req.headers.authorization.split("Bearer ")[1]) {
-    console.log("bearer is here");
-    const [rows] = await connection.execute(
-      "SELECT * FROM `users` WHERE `token` = ? AND `isVerified` = ?",
-      [req.headers.authorization.split("Bearer ")[1], true]
-    );
-
-    console.log(rows);
-
-    if (rows.length > 0) {
-      console.log("rows.length is > 0");
-      next(req, res);
-    } else {
-      console.log("rows is not > 0");
-      res.send("Token error");
-    }
-  } else {
-    console.log("bearer is not here");
-    res.send("Token error");
-  }
-};
-
 app.post("/test", (req, res) => {
   res.status(201).json({ status: "success" });
 });
@@ -72,15 +48,15 @@ app.get("/confirmEmail", async (req, res) => {
 
   console.log("before select");
   const [rows] = await connection.execute(
-    "SELECT * FROM `users` WHERE `email` = ? AND `token` = ? AND `isVerified` = ?",
-    [req.query.email, req.query.token, false]
+    "SELECT * FROM `potentialUsers` WHERE `email` = ? AND `token` = ?",
+    [req.query.email, req.query.token]
   );
   console.log("before rows");
   console.log("rows", rows);
   if (rows.length > 0) {
     const [rows] = await connection.execute(
-      "UPDATE `users` SET isVerified = ? WHERE `email` = ?",
-      [true, req.query.email]
+      "INSERT INTO `users` (email, token) VALUES (?, ?)",
+      [req.query.email, req.query.token]
     );
     res.send("Your token is now valid: " + req.query.token);
   }
@@ -89,44 +65,62 @@ app.get("/confirmEmail", async (req, res) => {
 
 app.get("/getToken", async (req, res) => {
   console.log(req.query.email);
-  const id = uuidv4();
-  try {
-    await connection.execute(
-      "INSERT INTO users (email, token, isVerified) VALUES (?, ?, ?)",
-      [req.query.email, id, false]
+  const domain = req.query.email.split("@");
+  if (
+    domain === "wilder.school" ||
+    req.query.email === "karim.makhloufi@wildcodeschool.com"
+  ) {
+    const id = uuidv4();
+
+    const [rows] = await connection.execute(
+      "SELECT FROM users (email) VALUES (?)",
+      [req.query.email]
     );
-  } catch (err) {
-    console.log("error while inserting data in db", err);
+
+    if (rows.length === 0) {
+      try {
+        await connection.execute(
+          "INSERT INTO potentialUsers (email, token) VALUES (?, ?)",
+          [req.query.email, id]
+        );
+      } catch (err) {
+        console.log("error while inserting data in db", err);
+      }
+
+      const msg = {
+        to: req.query.email, // Change to your recipient
+        from: "noreply@wildcodeschool.com", // Change to your verified sender
+        subject: "Confirm your email",
+        text:
+          "copy and paste this link in your browser https://wildstagram.nausicaa.wilders.dev/confirmEmail?email=" +
+          req.query.email +
+          "&token=" +
+          id,
+        html:
+          "<p>Click this link to confirm your email <a clicktracking='off' https://wildstagram.nausicaa.wilders.dev/confirmEmail?email=" +
+          req.query.email +
+          "&token=" +
+          id +
+          ">Clickme</a>",
+      };
+
+      sgMail
+        .send(msg)
+        .then((response) => {
+          console.log(response[0].statusCode);
+          console.log(response[0].headers);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+
+      res.send("check you email to confirm");
+    } else {
+      res.send("email exists, activate it");
+    }
+  } else {
+    res.send("enter a wildcodeschool.com email");
   }
-
-  const msg = {
-    to: req.query.email, // Change to your recipient
-    from: "noreply@wildcodeschool.com", // Change to your verified sender
-    subject: "Confirm your email",
-    text:
-      "copy and paste this link in your browser https://wildstagram.nausicaa.wilders.dev/confirmEmail?email=" +
-      req.query.email +
-      "&token=" +
-      id,
-    html:
-      "<p>Click this link to confirm your email <a clicktracking='off' https://wildstagram.nausicaa.wilders.dev/confirmEmail?email=" +
-      req.query.email +
-      "&token=" +
-      id +
-      ">Clickme</a>",
-  };
-
-  sgMail
-    .send(msg)
-    .then((response) => {
-      console.log(response[0].statusCode);
-      console.log(response[0].headers);
-    })
-    .catch((error) => {
-      console.error(error);
-    });
-
-  res.send("check you email to confirm");
 });
 
 app.get("/createToken", (req, res) => {
@@ -150,8 +144,8 @@ app.post("/upload", upload.single("fileData"), async (req, res) => {
   console.log(req.headers.authorization);
   if (req.headers.authorization.split("Bearer ")[1]) {
     const [rows] = await connection.execute(
-      "SELECT * FROM `users` WHERE `token` = ? AND `isVerified` = ?",
-      [req.headers.authorization.split("Bearer ")[1], true]
+      "SELECT * FROM `users` WHERE `token` = ?",
+      [req.headers.authorization.split("Bearer ")[1]]
     );
 
     if (rows.length > 0) {
