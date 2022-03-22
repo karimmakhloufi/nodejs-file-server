@@ -66,8 +66,7 @@ app.get("/confirmEmail", async (req, res) => {
 app.get("/getToken", async (req, res) => {
   console.log(req.query.email);
   let domain;
-
-  if (domain.lengthreq.query.email.split("@").length === 1) {
+  if (req.query.email.split("@").length === 1) {
     domain = req.query.email.split("%40")[1];
   } else {
     domain = req.query.email.split("@")[1];
