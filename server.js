@@ -8,18 +8,15 @@ const { v4: uuidv4 } = require("uuid");
 const sgMail = require("@sendgrid/mail");
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-let connection;
-
-const createConnectionToDB = async () => {
-  connection = await mysql.createConnection({
-    host: process.env.MYSQL_HOST,
-    user: process.env.MYSQL_USER,
-    database: process.env.MYSQL_DB,
-    password: process.env.MYSQL_PASSWORD,
-  });
-};
-
-createConnectionToDB();
+const pool = mysql.createPool({
+  host: process.env.MYSQL_HOST,
+  user: process.env.MYSQL_USER,
+  database: process.env.MYSQL_DB,
+  password: process.env.MYSQL_PASSWORD,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
+});
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -47,14 +44,14 @@ app.get("/confirmEmail", async (req, res) => {
   console.log("token", req.query.token);
 
   console.log("before select");
-  const [rows] = await connection.execute(
+  const [rows] = await pool.execute(
     "SELECT * FROM `potentialUsers` WHERE `email` = ? AND `token` = ?",
     [req.query.email, req.query.token]
   );
   console.log("before rows");
   console.log("rows", rows);
   if (rows.length > 0) {
-    const [rows] = await connection.execute(
+    const [rows] = await pool.execute(
       "INSERT INTO `users` (email, token) VALUES (?, ?)",
       [req.query.email, req.query.token]
     );
@@ -74,14 +71,13 @@ app.get("/getToken", async (req, res) => {
   if (domain === "wilder.school" || domain === "wildcodeschool.com") {
     const id = uuidv4();
 
-    const [rows] = await connection.execute(
-      "SELECT * FROM users WHERE email = ?",
-      [req.query.email]
-    );
+    const [rows] = await pool.execute("SELECT * FROM users WHERE email = ?", [
+      req.query.email,
+    ]);
 
     if (rows.length === 0) {
       try {
-        await connection.execute(
+        await pool.execute(
           "INSERT INTO potentialUsers (email, token) VALUES (?, ?)",
           [req.query.email, id]
         );
@@ -144,7 +140,7 @@ app.post("/upload", upload.single("fileData"), async (req, res) => {
   console.log("timestamp " + Date.now());
   console.log(req.headers.authorization);
   if (req.headers.authorization.split("Bearer ")[1]) {
-    const [rows] = await connection.execute(
+    const [rows] = await pool.execute(
       "SELECT * FROM `users` WHERE `token` = ?",
       [req.headers.authorization.split("Bearer ")[1]]
     );
