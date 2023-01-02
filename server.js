@@ -43,21 +43,32 @@ app.get("/confirmEmail", async (req, res) => {
   console.log("email", req.query.email);
   console.log("token", req.query.token);
 
-  console.log("before select");
-  const [rows] = await pool.execute(
-    "SELECT * FROM `potentialUsers` WHERE `email` = ? AND `token` = ?",
-    [req.query.email, req.query.token]
+  const [rowsAlready] = await pool.execute(
+    "SELECT * FROM `users` WHERE `email` = ?",
+    [req.query.email]
   );
-  console.log("before rows");
-  console.log("rows", rows);
-  if (rows.length > 0) {
+
+  if (rowsAlready.length > 0) {
+    res.send(
+      "Your account is already activated, use the token you received by email"
+    );
+  } else {
+    console.log("before select");
     const [rows] = await pool.execute(
-      "INSERT INTO `users` (email, token) VALUES (?, ?)",
+      "SELECT * FROM `potentialUsers` WHERE `email` = ? AND `token` = ?",
       [req.query.email, req.query.token]
     );
-    res.send("Your token is now valid: " + req.query.token);
+    console.log("before rows");
+    console.log("rows", rows);
+    if (rows.length > 0) {
+      await pool.execute("INSERT INTO `users` (email, token) VALUES (?, ?)", [
+        req.query.email,
+        req.query.token,
+      ]);
+      res.send("Your token is now valid: " + req.query.token);
+    }
+    res.send("Error confirming your token, contact your instructor");
   }
-  res.send("Error confirming your token, contact your instructor");
 });
 
 app.get("/getToken", async (req, res) => {
